@@ -157,10 +157,11 @@ def process_emails(mailbox_name, id_list, box, con, cur, settings):
     # for m_id in [x for x in id_list if int(x) in (590,)]:
     list_len = len(id_list)
     print(f'Przetwarzam skrzynkę {mailbox_name}. Maili do importu: {list_len}')
-    for i, m_id in enumerate(id_list[::-1]):
-        if ((i % 100 == 0 and i > 0) or i == list_len): print(f'Zaimportowanych maili: {i}')
-        # tmp_msg_print_body_len(mailbox_name, m_id, box, con, cur, settings)
-        process_email(mailbox_name, m_id, box, con, cur, settings)
+    if list_len != 0:
+        for i, m_id in enumerate(id_list[::-1]):
+            if ((i % 100 == 0 and i > 0) or i == list_len): print(f'Zaimportowanych maili: {i}')
+            # tmp_msg_print_body_len(mailbox_name, m_id, box, con, cur, settings)
+            process_email(mailbox_name, m_id, box, con, cur, settings)
 
 
 def main():
