@@ -60,14 +60,16 @@ def get_mailboxes(settings):
 def get_mail_ids(box, last_id_done: int, quantity: int) -> list:
     '''calculates the list of mail ids to be imported'''
     ids_b = box.listids(quantity) # list of binary ids
-    oldest_id = int(ids_b[-1])
-    # since easyimap.listids gives fixed len list, not complete list, iterate to get the long enough list
-    while not ((len(ids_b) < quantity) or (oldest_id < last_id_done) or (oldest_id == 1)): # all ids from the box collected
-        quantity *= 10
-        ids_b = box.listids(quantity)  # list of binary ids
+    if len(ids_b) == 0: return ids_b # empty box
+    else:
         oldest_id = int(ids_b[-1])
-    wynik = limit_id_list(last_id_done, ids_b)
-    return wynik
+        # since easyimap.listids gives fixed len list, not complete list, iterate to get the long enough list
+        while not ((len(ids_b) < quantity) or (oldest_id < last_id_done) or (oldest_id == 1)): # all ids from the box collected
+            quantity *= 10
+            ids_b = box.listids(quantity)  # list of binary ids
+            oldest_id = int(ids_b[-1])
+        wynik = limit_id_list(last_id_done, ids_b)
+        return wynik
 
 
 def limit_id_list(last_id_done, id_list_b):
