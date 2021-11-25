@@ -8,8 +8,9 @@ from imaplib import IMAP4
 
 
 def get_settings():
-    parser = ConfigParser()
-    parser.read('settings.ini')
+    parser = ConfigParser(interpolation=None)
+    parser.read('settings_jz.ini')
+    print(parser.get('mysql', 'pass'))
     return parser
 
 def gmail_login(settings, mailbox):
