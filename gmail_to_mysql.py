@@ -37,7 +37,7 @@ def connect_mysql(settings):
         con = mysql.connector.connect(user=user, password=password, host=host, database=database, port=port)
         cur = con.cursor()
     except Exception as e:
-        exception_handle(e)
+        exception_handle_exit(e)
     else:
         print('Zalogowano do mysql')
         return con, cur
@@ -87,20 +87,25 @@ def process_datetime(mail_date):
 def process_email(mailbox_name, m_id, box, con, cur, settings):
     '''gathers email attrs to be saved to mysql'''
     # global msg
-    msg = box.mail(m_id)
-    out = {}
-    out['uid'] = int(m_id)
-    out['mailbox'] = 'outbox' if mailbox_name == '[Gmail]/Wys&AUI-ane' else mailbox_name
-    out['date'] = process_datetime(msg.date)
-    out['from_addr'] = msg.from_addr
-    out['to'] = msg.to
-    out['cc'] = None if msg.cc == '' else msg.cc
-    out['title'] = None if msg.title == '' else msg.title
-    out['body'] = msg.body
-    out['attachments'] = msg.attachments
-    email_to_mysql(out, con, cur, settings)
-    # save_email(out)
-    # return out
+    try:
+        msg = box.mail(m_id)
+    except UnicodeDecodeError as e:
+        print(f'Problem z kodowaniem maila o id {int(m_id)} w skrzynce {mailbox_name}. Pominięty. Szczegóły:')
+        exception_handle_print(e)
+    else:
+        out = {}
+        out['uid'] = int(m_id)
+        out['mailbox'] = 'outbox' if mailbox_name == '[Gmail]/Wys&AUI-ane' else mailbox_name
+        out['date'] = process_datetime(msg.date)
+        out['from_addr'] = msg.from_addr
+        out['to'] = msg.to
+        out['cc'] = None if msg.cc == '' else msg.cc
+        out['title'] = None if msg.title == '' else msg.title
+        out['body'] = msg.body
+        out['attachments'] = msg.attachments
+        email_to_mysql(out, con, cur, settings)
+        # save_email(out)
+        # return out
 
 def tmp_msg_print_body_len(mailbox_name, m_id, box, con, cur, settings):
     # global msg, data
@@ -113,11 +118,15 @@ def update_inbox_done(settings, inbox, mail_id):
     with open ('settings.ini', 'w') as f:
         settings.write(f)
 
-def exception_handle(e: Exception):
+def exception_handle_exit(e: Exception):
     print('Klasa wyjątku:', type(e))
     print('Szczegóły wyjątku: ', e)
     print('Kończę')
     sys.exit()
+
+def exception_handle_print(e: Exception):
+    print('Klasa wyjątku:', type(e))
+    print('Szczegóły wyjątku: ', e)
 
 
 def email_to_mysql(mail_dict, con, cur, settings):
@@ -139,7 +148,7 @@ def email_to_mysql(mail_dict, con, cur, settings):
             cur.execute(attachments_sql, attachments_values)
     except Exception as e:
         con.rollback()
-        exception_handle(e)
+        exception_handle_exit(e)
     else:
         con.commit()
         update_inbox_done(settings, mail_dict['mailbox'], str(mail_dict['uid']))
