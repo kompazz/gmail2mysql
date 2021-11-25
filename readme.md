@@ -14,4 +14,4 @@ Setup:
 
 Usage:
 
-`python gmail_to_mysql.py`
+`python3 gmail_to_mysql.py`
