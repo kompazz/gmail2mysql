@@ -97,7 +97,8 @@ def process_email(mailbox_name, m_id, box, con, cur, settings):
     else:
         out = {}
         out['uid'] = int(m_id)
-        out['mailbox'] = 'outbox' if mailbox_name == '[Gmail]/Wys&AUI-ane' else mailbox_name
+        # out['mailbox'] = 'outbox' if mailbox_name == '[Gmail]/Wys&AUI-ane' else mailbox_name
+        out['mailbox'] = 'outbox' if '[Gmail]' in mailbox_name else mailbox_name
         out['date'] = process_datetime(msg.date)
         out['from_addr'] = msg.from_addr
         out['to'] = msg.to
@@ -105,6 +106,7 @@ def process_email(mailbox_name, m_id, box, con, cur, settings):
         out['title'] = None if msg.title == '' else msg.title
         out['body'] = msg.body
         out['attachments'] = msg.attachments
+        # print(out)
         email_to_mysql(out, con, cur, settings)
         # save_email(out)
         # return out
@@ -169,7 +171,8 @@ def process_emails(mailbox_name, id_list, box, con, cur, settings):
     list_len = len(id_list)
     print(f'Przetwarzam skrzynkę {mailbox_name}. Maili do importu: {list_len}')
     if list_len != 0:
-        for i, m_id in enumerate(id_list[::-1]):
+        for i, m_id in enumerate(id_list[::1]):
+        # for i, m_id in enumerate(id_list[::1][:13]):
             if ((i % 100 == 0 and i > 0) or i == list_len): print(f'Zaimportowanych maili: {i}')
             # tmp_msg_print_body_len(mailbox_name, m_id, box, con, cur, settings)
             process_email(mailbox_name, m_id, box, con, cur, settings)
@@ -183,7 +186,10 @@ def main():
     for mailbox in mailboxes:
         # Actual name contains square brackets so can't be used in settings.ini, hence replacement
         if mailbox[0] == 'outbox':
-            mailbox = ('[Gmail]/Wys&AUI-ane', mailbox[1])
+            language = settings['server']['language']
+            # mailbox = ('[Gmail]/Wys&AUI-ane', mailbox[1])
+            # get language dependent outbox name
+            mailbox = (settings['language'][language], mailbox[1])
         # mailbox name is the first element, second being last done email
         mailbox_name = mailbox[0]
         # connect to gmail; box points to current mailbox
@@ -192,6 +198,7 @@ def main():
         mail_ids = get_mail_ids(box, int(mailbox[1]), 10)
         # connect to mysql
         mysql_con, mysql_cur = connect_mysql(settings)
+        # mysql_con, mysql_cur = 0, 1
         process_emails(mailbox_name, mail_ids, box, mysql_con, mysql_cur, settings)
         mysql_close(mysql_con)
         gmail_close(box)
