@@ -18,4 +18,5 @@ Usage:
 
 
 Known issues:
+
 Encoding - some messages are saved with html code instead of just the text. Fix is welcome
